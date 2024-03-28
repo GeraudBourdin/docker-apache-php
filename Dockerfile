@@ -1,6 +1,8 @@
+
 ARG PHP_VERSION
 ARG DEBIAN_VERSION
 FROM php:${PHP_VERSION}-${DEBIAN_VERSION}
+
 ARG XDEBUG_VERSION
 SHELL ["/bin/bash", "-c"]
 ARG COMPOSER_HOME=/composer
@@ -87,6 +89,8 @@ RUN apt-get update \
         libonig-dev \
         chromium  \
         gnupg2 \
+        nodejs\
+        npm \
     && ln -s /usr/lib/x86_64-linux-gnu/libldap.so /usr/lib/libldap.so \
     && ln -s /usr/lib/x86_64-linux-gnu/liblber.so /usr/lib/liblber.so \
     && ln -s /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h
@@ -179,6 +183,7 @@ RUN cd /tmp/ && git clone https://github.com/powerline/fonts.git \
     && cd /tmp && rm -Rf /tmp/fonts
 
 RUN apt-get -y install ruby && gem install bundler && gem install capistrano
+
 
 
 RUN usermod -u 1000 www-data
