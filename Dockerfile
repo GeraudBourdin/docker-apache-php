@@ -1,7 +1,7 @@
-
-ARG PHP_VERSION
-ARG DEBIAN_VERSION
-FROM php:${PHP_VERSION}-${DEBIAN_VERSION}
+ARG PHP_VERSION=8.3
+ARG DEBIAN_VERSION=bullseye
+#FROM php:${PHP_VERSION}-${DEBIAN_VERSION}
+FROM php@sha256:7fb7a483bf2e0b4ea40a1918c6efc0574c049750dcb25c779e01c36af0778fe6
 
 ARG XDEBUG_VERSION
 SHELL ["/bin/bash", "-c"]
@@ -9,7 +9,8 @@ ARG COMPOSER_HOME=/composer
 ENV NPM_ENTRYPOINT=/usr/local/bin/docker-npm-entrypoint
 ENV YARN_ENTRYPOINT=/usr/local/bin/docker-yarn-entrypoint
 ENV ACCEPT_EULA="Y"
-RUN a2enmod rewrite expires include deflate
+RUN a2enmod rewrite expires include deflate mpm_prefork
+RUN a2dismod mpm_event mpm_worker
 
 WORKDIR /var/www/
 
@@ -106,15 +107,30 @@ COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 # Installation du php.ini
 COPY php.ini /usr/local/etc/php/conf.d/app.ini
 
-RUN docker-php-ext-install mysqli bcmath intl xml pdo_mysql pgsql pdo_pgsql pdo_sqlite zip dom session opcache curl bz2 iconv calendar exif xsl mbstring \
-    && pecl install apcu && docker-php-ext-enable apcu \
-    && pecl install imagick && docker-php-ext-enable  imagick
+RUN docker-php-ext-install mysqli bcmath intl xml pdo_mysql pgsql pdo_pgsql pdo_sqlite zip dom session opcache curl bz2 iconv calendar exif xsl mbstring
+RUN pecl install apcu && docker-php-ext-enable apcu
+
+RUN git clone https://github.com/Imagick/imagick.git --depth 1 /tmp/imagick && \
+        cd /tmp/imagick && \
+        git fetch origin master && \
+        git switch master && \
+        cd /tmp/imagick && \
+        phpize && \
+        ./configure && \
+        make && \
+        make install && \
+        docker-php-ext-enable imagick
+
+
+
+
+
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
         && docker-php-ext-install gd
 
-COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions http
+#COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+#RUN install-php-extensions http
 
 #RUN   mkdir -p /usr/local/nvm && \
 #      curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash && \
@@ -126,7 +142,7 @@ RUN install-php-extensions http
 #      npm install --global yarn && \
 #      npm install -g @vue/cli
 
-RUN pecl install xdebug-${XDEBUG_VERSION} && docker-php-ext-enable  xdebug;
+RUN pecl install xdebug-3.3.2 && docker-php-ext-enable  xdebug;
 
 ## Quality tools
 RUN composer global require phing/phing

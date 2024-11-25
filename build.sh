@@ -14,7 +14,7 @@ makeVersion () {
   fi
 
   if [[ $PHP_VERSION == 8.3 ]]; then
-    XDEBUG_VERSION=3.3.1
+    XDEBUG_VERSION=3.3.2
   fi
 
   docker build \
@@ -22,10 +22,9 @@ makeVersion () {
   --build-arg PHP_VERSION="${PHP_VERSION}" \
   --build-arg XDEBUG_VERSION=$XDEBUG_VERSION \
   --build-arg DEBIAN_VERSION=$DEBIAN_VERSION \
-  --squash --compress \
-  --no-cache .
+  --compress  .
   ## Push to personal repo on docker.io
-  docker push devpartitech/php:"${PHP_VERSION}"-apache
+ ## docker push devpartitech/php:"${PHP_VERSION}"-apache
 }
 
 PHP_VERSIONS=(8.3)
